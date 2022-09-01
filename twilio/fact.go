@@ -53,8 +53,8 @@ func (m *Manager) RegisterFact(uid *id.ID, fact string, factType uint8, signatur
 	factId := factID.Fingerprint(f)
 
 	// Adds entry to facts and verifications tables
-	jww.DEBUG.Printf("RegisterFact: Adding fact %s (type %s) with factId (hash) %s and confirmation ID %d",
-		fact, factType, base64.StdEncoding.EncodeToString(factId), verifyId)
+	jww.DEBUG.Printf("RegisterFact: Adding fact %s (type %s) with factId (hash) %s and confirmation ID %s",
+		fact, fact2.FactType(factType), base64.StdEncoding.EncodeToString(factId), verifyId)
 	err = m.storage.InsertFactTwilio(uid.Marshal(), factId, signature, uint(factType), verifyId)
 	// Makes call to Verification endpoint in twilio
 	// Return the confirmation ID from db entry
@@ -64,7 +64,7 @@ func (m *Manager) RegisterFact(uid *id.ID, fact string, factType uint8, signatur
 // ConfirmFact confirms a code and completes fact verification
 func (m *Manager) ConfirmFact(confirmationID string, code string) (bool, error) {
 	// Make call to verification check endpoint with code
-	jww.DEBUG.Printf("confirmFact: confirmed fact with confirmation ID %d", confirmationID)
+	jww.DEBUG.Printf("confirmFact: confirmed fact with confirmation ID %s", confirmationID)
 	valid, err := m.verifier.VerificationCheck(code, confirmationID)
 	if err != nil {
 		return false, err
