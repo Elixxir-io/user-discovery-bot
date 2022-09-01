@@ -63,6 +63,7 @@ func (sm *searchManager) handleSearch(req *single.Request) *ud.SearchResponse {
 	jww.DEBUG.Printf("Raw search returned %+v", users)
 
 	for _, u := range users {
+		jww.DEBUG.Printf("Raw User %+v", u.Username)
 		if bytes.Compare(u.Id, id.DummyUser[:]) == 0 {
 			jww.DEBUG.Printf("Don't return dummy user")
 			continue
@@ -74,9 +75,7 @@ func (sm *searchManager) handleSearch(req *single.Request) *ud.SearchResponse {
 
 		var uFacts []*ud.HashFact
 		for _, f := range u.Facts {
-			if f.Type == uint8(fact.Username) {
-				contact.Username = u.Username
-			}
+			contact.Username = u.Username
 			uFacts = append(uFacts, &ud.HashFact{
 				Hash: f.Hash,
 				Type: int32(f.Type),
@@ -90,6 +89,8 @@ func (sm *searchManager) handleSearch(req *single.Request) *ud.SearchResponse {
 	if len(response.Contacts) == 0 {
 		response.Error = "NO RESULTS FOUND"
 	}
+
+	jww.DEBUG.Printf("Raw Search Response returned %+v", response)
 
 	return response
 }
