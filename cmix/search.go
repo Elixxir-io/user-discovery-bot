@@ -2,6 +2,7 @@ package cmix
 
 import (
 	"bytes"
+	"encoding/base64"
 	"github.com/golang/protobuf/proto"
 	"github.com/pkg/errors"
 	jww "github.com/spf13/jwalterweatherman"
@@ -44,6 +45,7 @@ func (sm *searchManager) handleSearch(req *single.Request) *ud.SearchResponse {
 
 	var factHashes [][]byte
 	facts := msg.GetFact()
+	factHashesEnc := make([]string, 0)
 	for _, f := range facts {
 		if fact.FactType(f.Type) == fact.Nickname {
 			jww.WARN.Printf("Cannot search by nickname; fact hash %+v rejected.",
@@ -51,7 +53,10 @@ func (sm *searchManager) handleSearch(req *single.Request) *ud.SearchResponse {
 			continue
 		}
 		factHashes = append(factHashes, f.Hash)
+		factHashesEnc = append(factHashesEnc, base64.StdEncoding.EncodeToString(f.Hash))
 	}
+
+	jww.DEBUG.Printf("handleSearch: fact hashes (base64 encooded): %v", factHashesEnc)
 
 	users, err := sm.m.db.Search(factHashes)
 	if err != nil {
@@ -60,10 +65,12 @@ func (sm *searchManager) handleSearch(req *single.Request) *ud.SearchResponse {
 		return response
 	}
 
-	jww.DEBUG.Printf("Raw search returned %+v", users)
+	jww.DEBUG.Printf("handleSearch: Raw search returned %+v", users)
 
 	for _, u := range users {
-		jww.DEBUG.Printf("Raw User %+v", u.Username)
+		jww.DEBUG.Printf("handleSearch: Raw User username %+v", u.Username)
+		jww.DEBUG.Printf("handleSearch: Raw User %+v", u)
+
 		if bytes.Compare(u.Id, id.DummyUser[:]) == 0 {
 			jww.DEBUG.Printf("Don't return dummy user")
 			continue
@@ -90,7 +97,7 @@ func (sm *searchManager) handleSearch(req *single.Request) *ud.SearchResponse {
 		response.Error = "NO RESULTS FOUND"
 	}
 
-	jww.DEBUG.Printf("Raw Search Response returned %+v", response)
+	jww.DEBUG.Printf("handleSearch: Raw Search Response returned %+v", response)
 
 	return response
 }
